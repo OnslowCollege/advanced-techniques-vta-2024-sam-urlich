@@ -460,6 +460,7 @@ class MyAmazingApp(App):
         self.easy_but = GUI.Button("Easy")
         self.med_but = GUI.Button("Medium")
         self.hard_but = GUI.Button("Hard")
+        self.Player_stats: dict[str, int] = {"Energy": 200, "Health": 200}
         self.mode = 5
         self.easy_but.onclick.do(self.easy_button)
         self.med_but.onclick.do(self.med_button)
@@ -496,10 +497,19 @@ class MyAmazingApp(App):
 
     def poke_selected(self, Poke_butt: GUI.Button):
         self.user_pokemon = Poke_butt
+        self.fighting()
         
     def fighting(self):
-
-    def questions(self)
+        self.Pokemon_stats: dict[str, int] = {"Energy": 100, "Health": 100}
+        for i in range(5):
+            self.mode_box.empty()
+            comp_pokemon = GUI.Label(Pokemons[i]["Name"][self.mode])
+            comp_pic = GUI.VBox(Pokemons[i]["Picture"][self.mode])
+            comp_health = GUI.Label("Health", self.Pokemon_stats["Health"])
+            comp_eng = GUI.Label("Energy", self.Pokemon_stats["Energy"])
+            self.comp_poke = GUI.HBox([comp_pokemon, comp_pic])
+            self.mode_box.append([self.comp_poke])
+        
 
 
 
