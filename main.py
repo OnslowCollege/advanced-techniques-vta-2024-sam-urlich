@@ -27,7 +27,7 @@ Pokemons: list[dict[Any, Any]] = [
         "Time": 30,
         "Attack_Name": "Mud Splat",
         "Attack_Dmg": 25,
-        "Attack_Eng": 40,
+        "Attack_Eng": -40,
     },
     {
         "Name": ["Squirtle", "Wartortle", "Blastoise"],
@@ -41,7 +41,7 @@ Pokemons: list[dict[Any, Any]] = [
         "Time": 25,
         "Attack_Name": "Splash",
         "Attack_Dmg": 30,
-        "Attack_Eng": 35,
+        "Attack_Eng": -35,
     },
     {
         "Name": ["Pichu", "Pikachu", "Raichu"],
@@ -55,7 +55,7 @@ Pokemons: list[dict[Any, Any]] = [
         "Time": 20,
         "Attack_Name": "lightning Strike",
         "Attack_Dmg": 35,
-        "Attack_Eng": 30,
+        "Attack_Eng": -30,
     },
     {
         "Name": ["Charmander", "Charmeleon", "Charizard"],
@@ -69,7 +69,7 @@ Pokemons: list[dict[Any, Any]] = [
         "Time": 15,
         "Attack_Name": "Fire Breath",
         "Attack_Dmg": 60,
-        "Attack_Eng": 60,
+        "Attack_Eng": -60,
     },
     {
         "Name": ["Gastly", "Haunter", "Gengar"],
@@ -83,16 +83,16 @@ Pokemons: list[dict[Any, Any]] = [
         "Time": 10,
         "Attack_Name": "Poison Spit",
         "Attack_Dmg": 48,
-        "Attack_Eng": 30,
+        "Attack_Eng": -30,
     },
 ]
 
 # creates attacks for user that can be used instead of default ones
 Attacks: dict[str, dict[str, int]] = {
-    "Punch": {"Dmg": 20, "Eng": 5, "Order": 2},
-    "Bite": {"Dmg": 35, "Eng": 15, "Order": 3},
-    "Flying Kick": {"Dmg": 55, "Eng": 199, "Order": 4},
-    "Skip": {"Dmg": 0, "Eng": 0, "Order": 5}
+    "Punch": {"Dmg": 20, "Eng": -5, "Order": 2},
+    "Bite": {"Dmg": 35, "Eng": -15, "Order": 3},
+    "Flying Kick": {"Dmg": 55, "Eng": -99, "Order": 4},
+    "Skip": {"Dmg": 0, "Eng": 35, "Order": 5},
     }
 
 # making questions
@@ -456,17 +456,19 @@ class MyAmazingApp(App):
         super().__init__(*args, static_file_path={"res": res_path})
 
     def main(self):
+        # setting up modes
         self.ask_user_mode = GUI.Label("Would you like to play on")
         self.easy_but = GUI.Button("Easy")
+        self.order = -1
         self.med_but = GUI.Button("Medium")
         self.hard_but = GUI.Button("Hard")
+        # giving player health and energy
         self.Player_stats: dict[str, int] = {"Energy": 200, "Health": 200}
         self.mode = 5
         self.easy_but.onclick.do(self.easy_button)
         self.med_but.onclick.do(self.med_button)
         self.hard_but.onclick.do(self.hard_button)
         self.button_box = GUI.HBox([self.easy_but, self.med_but, self.hard_but])
-        print(Pokemons[1]["Picture"][1])
         self.mode_box = GUI.HBox([self.ask_user_mode, self.button_box])
         return(self.mode_box)
     
@@ -496,19 +498,68 @@ class MyAmazingApp(App):
         self.mode_box.append([self.Pokemons_prop])
 
     def poke_selected(self, Poke_butt: GUI.Button):
-        self.user_pokemon = Poke_butt
-        self.fighting()
+        # gets what poekmon is chosen
+        self.chosen_pokemon = Poke_butt
+        self.set_fighting()
         
-    def fighting(self):
+    def set_fighting(self):
+        self.mode_box.empty()
+        # creating loop for enimes
+        self.order = self.order + 1
         self.Pokemon_stats: dict[str, int] = {"Energy": 100, "Health": 100}
-        for i in range(5):
+        if self.order == 5:
+            self.win()
+        self.fighting()
+
+    def fighting(self):
+        if self.Pokemon_stats["Health"] > 0 and self.Player_stats["Health"] > 0:
             self.mode_box.empty()
-            comp_pokemon = GUI.Label(Pokemons[i]["Name"][self.mode])
-            comp_pic = GUI.VBox(Pokemons[i]["Picture"][self.mode])
-            comp_health = GUI.Label("Health", self.Pokemon_stats["Health"])
-            comp_eng = GUI.Label("Energy", self.Pokemon_stats["Energy"])
-            self.comp_poke = GUI.HBox([comp_pokemon, comp_pic])
-            self.mode_box.append([self.comp_poke])
+            # setting up enimes
+            comp_pokemon = GUI.Label(Pokemons[self.order]["Name"][self.mode])
+            comp_pic = GUI.HBox(Pokemons[self.order]["Picture"][self.mode])
+            comp_health = GUI.Label("Health:{}".format(self.Pokemon_stats["Health"]))
+            comp_eng = GUI.Label("Energy:{}".format(self.Pokemon_stats["Energy"]))
+            self.comp_poke = GUI.VBox([comp_pokemon, comp_pic, comp_health, comp_eng])
+
+            # setting up users pokemon
+            user_pokemon = GUI.Label(Pokemons[self.chosen_pokemon]["Name"][self.mode])
+            user_pic = GUI.HBox(Pokemons[self.chosen_pokemon]["Picture"][self.mode])
+            user_health = GUI.Label("Health:{}".format(self.Player_stats["Health"]))
+            user_eng = GUI.Label("Energy:{}".format(self.Player_stats["Energy"]))
+            self.user_poke = GUI.VBox([user_pokemon, user_pic, user_health, user_eng])
+
+            # setting up users attacks
+            self.attacks = GUI.Label(f"{Pokemons[self.chosen_pokemon]["Attack_Dmg"]} damage, {Pokemons[self.chosen_pokemon]["Attack_Eng"]} energy!")
+            self.attack_buts = GUI.Button(Pokemons[self.chosen_pokemon]["Attack_Name"])
+            self.attack_boxs = GUI.HBox([self.attack_buts, self.attacks])
+            self.attack_choice = GUI.VBox(self.attack_boxs)
+            self.attack_buts.onclick.do(self.spec_attack)
+            for name in Attacks.keys():
+                self.attack = GUI.Label(f"{Attacks[name]["Dmg"]} damage, {Attacks[name]["Eng"]} energy!")
+                self.attack_but = GUI.Button(name)
+                self.attack_box = GUI.HBox([self.attack_but, self.attack])
+                self.attack_choice.append(self.attack_box)
+                self.attack_but.onclick.do(self.attacking)
+                self.attack_but.onclick.do(lambda _, i=Attacks[name]["Order"]: self.attacking(i))
+            Fight = GUI.VBox([self.comp_poke, self.user_poke, self.attack_choice])
+            self.mode_box.append([Fight])
+        else:
+            self.set_fighting()
+
+    def attacking(self, attack_but: GUI.Button):
+        self.ordering = attack_but
+    
+    def spec_attack(self, attack_buts: GUI.Button):
+        self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Pokemons[self.chosen_pokemon]["Attack_Dmg"]
+        self.Player_stats["Energy"] = self.Player_stats["Energy"] + Pokemons[self.chosen_pokemon]["Attack_Eng"]
+        self.fighting()
+
+    def win(self):
+        self.mode_box.empty()
+        win = GUI.Label("CONGRATS U WON!!!")
+        self.mode_box.append([win])
+        
+        
         
 
 
