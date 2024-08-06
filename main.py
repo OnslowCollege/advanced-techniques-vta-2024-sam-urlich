@@ -487,7 +487,6 @@ class MyAmazingApp(App):
     def sel_poke(self):
         self.mode_box.empty()
         self.Pokemons_prop = GUI.HBox()
-        print(Pokemons[1]["Name"][1])
         for i in range (5):
             self.Poke_butt = GUI.Button(Pokemons[i]["Name"][self.mode])
             self.Pokemons_box = GUI.VBox([Pokemons[i]["Picture"][self.mode], self.Poke_butt])
@@ -509,46 +508,83 @@ class MyAmazingApp(App):
         self.Pokemon_stats: dict[str, int] = {"Energy": 100, "Health": 100}
         if self.order == 5:
             self.win()
-        self.fighting()
+        else:
+            self.user_attack = True
+            self.fighting()
 
     def fighting(self):
-        if self.Pokemon_stats["Health"] > 0 and self.Player_stats["Health"] > 0:
-            self.mode_box.empty()
-            # setting up enimes
-            comp_pokemon = GUI.Label(Pokemons[self.order]["Name"][self.mode])
-            comp_pic = GUI.HBox(Pokemons[self.order]["Picture"][self.mode])
-            comp_health = GUI.Label("Health:{}".format(self.Pokemon_stats["Health"]))
-            comp_eng = GUI.Label("Energy:{}".format(self.Pokemon_stats["Energy"]))
-            self.comp_poke = GUI.VBox([comp_pokemon, comp_pic, comp_health, comp_eng])
+        if self.Player_stats["Health"] > 0:
+            if self.Pokemon_stats["Health"] > 0:
+                if self.Player_stats["Energy"] > 0:
+                    self.mode_box.empty()
+                    # setting up enimes
+                    comp_pokemon = GUI.Label(Pokemons[self.order]["Name"][self.mode])
+                    comp_pic = GUI.HBox(Pokemons[self.order]["Picture"][self.mode])
+                    comp_health = GUI.Label("Health:{}".format(self.Pokemon_stats["Health"]))
+                    comp_eng = GUI.Label("Energy:{}".format(self.Pokemon_stats["Energy"]))
+                    self.comp_poke = GUI.VBox([comp_pokemon, comp_pic, comp_health, comp_eng])
 
-            # setting up users pokemon
-            user_pokemon = GUI.Label(Pokemons[self.chosen_pokemon]["Name"][self.mode])
-            user_pic = GUI.HBox(Pokemons[self.chosen_pokemon]["Picture"][self.mode])
-            user_health = GUI.Label("Health:{}".format(self.Player_stats["Health"]))
-            user_eng = GUI.Label("Energy:{}".format(self.Player_stats["Energy"]))
-            self.user_poke = GUI.VBox([user_pokemon, user_pic, user_health, user_eng])
+                    # setting up users pokemon
+                    user_pokemon = GUI.Label(Pokemons[self.chosen_pokemon]["Name"][self.mode])
+                    user_pic = GUI.HBox(Pokemons[self.chosen_pokemon]["Picture"][self.mode])
+                    user_health = GUI.Label("Health:{}".format(self.Player_stats["Health"]))
+                    user_eng = GUI.Label("Energy:{}".format(self.Player_stats["Energy"]))
+                    self.user_poke = GUI.VBox([user_pokemon, user_pic, user_health, user_eng])
 
-            # setting up users attacks
-            self.attacks = GUI.Label(f"{Pokemons[self.chosen_pokemon]["Attack_Dmg"]} damage, {Pokemons[self.chosen_pokemon]["Attack_Eng"]} energy!")
-            self.attack_buts = GUI.Button(Pokemons[self.chosen_pokemon]["Attack_Name"])
-            self.attack_boxs = GUI.HBox([self.attack_buts, self.attacks])
-            self.attack_choice = GUI.VBox(self.attack_boxs)
-            self.attack_buts.onclick.do(self.spec_attack)
-            for name in Attacks.keys():
-                self.attack = GUI.Label(f"{Attacks[name]["Dmg"]} damage, {Attacks[name]["Eng"]} energy!")
-                self.attack_but = GUI.Button(name)
-                self.attack_box = GUI.HBox([self.attack_but, self.attack])
-                self.attack_choice.append(self.attack_box)
-                self.attack_but.onclick.do(self.attacking)
-                self.attack_but.onclick.do(lambda _, i=Attacks[name]["Order"]: self.attacking(i))
-            Fight = GUI.VBox([self.comp_poke, self.user_poke, self.attack_choice])
-            self.mode_box.append([Fight])
+                    # setting up users attacks
+                    if self.user_attack == True:
+                        self.user_attack = False
+                        self.attacks = GUI.Label(f"{Pokemons[self.chosen_pokemon]["Attack_Dmg"]} damage, {Pokemons[self.chosen_pokemon]["Attack_Eng"]} energy!")
+                        self.attack_buts = GUI.Button(Pokemons[self.chosen_pokemon]["Attack_Name"])
+                        neg_eng = self.Player_stats["Energy"] + Pokemons[self.chosen_pokemon]["Attack_Eng"]
+                        if neg_eng < 0:
+                            self.attack_buts.set_enabled(False)
+                        self.attack_boxs = GUI.HBox([self.attack_buts, self.attacks])
+                        self.attack_choice = GUI.VBox(self.attack_boxs)
+                        self.attack_buts.onclick.do(self.spec_attack)
+                        for name in Attacks.keys():
+                            self.attack = GUI.Label(f"{Attacks[name]["Dmg"]} damage, {Attacks[name]["Eng"]} energy!")
+                            self.attack_but = GUI.Button(name)
+                            neg_eng = self.Player_stats["Energy"] + Attacks[name]["Eng"]
+                            if neg_eng < 0:
+                                self.attack_but.set_enabled(False)
+                            self.attack_box = GUI.HBox([self.attack_but, self.attack])
+                            self.attack_choice.append(self.attack_box)
+                            self.attack_but.onclick.do(self.attacking)
+                            self.attack_but.onclick.do(lambda _, i=Attacks[name]["Order"]: self.attacking(i))
+                        Fight = GUI.VBox([self.comp_poke, self.user_poke, self.attack_choice])
+                        self.mode_box.append([Fight])
+                    else:
+                        self.comp_attack()
+                else:
+                        self.Player_stats["Energy"] = self.Player_stats["Energy"] + 35
+                        self.user_attack = True
+                        self.fighting()
+            else:
+                self.set_fighting()
         else:
-            self.set_fighting()
+            self.lose()
+        
+    def comp_attack(self):
+        self.user_attack = True
+        neg_eng = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
+        print(neg_eng)
+        if neg_eng > 0:
+            self.Player_stats["Health"] = self.Player_stats["Health"] - Pokemons[self.order]["Attack_Dmg"]
+            self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
+        else:
+            self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + 35
+        self.fighting()
 
     def attacking(self, attack_but: GUI.Button):
         self.ordering = attack_but
-    
+        for at in Attacks.keys():
+            if Attacks[at]["Order"] == self.ordering:
+                self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Attacks[at]["Dmg"]
+                self.Player_stats["Energy"] = self.Player_stats["Energy"] + Attacks[at]["Eng"]
+                self.fighting()
+
+
     def spec_attack(self, attack_buts: GUI.Button):
         self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Pokemons[self.chosen_pokemon]["Attack_Dmg"]
         self.Player_stats["Energy"] = self.Player_stats["Energy"] + Pokemons[self.chosen_pokemon]["Attack_Eng"]
@@ -558,10 +594,10 @@ class MyAmazingApp(App):
         self.mode_box.empty()
         win = GUI.Label("CONGRATS U WON!!!")
         self.mode_box.append([win])
-        
-        
-        
-
-
+    
+    def lose(self):
+        self.mode_box.empty()
+        win = GUI.Label("CONGRATS U LOST!!!")
+        self.mode_box.append([win])
 
 start(MyAmazingApp)
