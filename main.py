@@ -473,23 +473,28 @@ class MyAmazingApp(App):
         return(self.mode_box)
     
     def easy_button(self, easy_but: GUI.Button):
+        # putting in mode
         self.mode = 0
         self.sel_poke()
 
     def med_button(self, med_but: GUI.Button):
+        # putting in mode
         self.mode = 1
         self.sel_poke()
 
     def hard_button(self, hard_but: GUI.Button):
+        # putting in mode
         self.mode = 2
         self.sel_poke()
 
     def sel_poke(self):
         self.mode_box.empty()
         self.Pokemons_prop = GUI.HBox()
+        # selecting spefic pokemon
         for i in range (5):
+            # adding all pokemon in
             self.Poke_butt = GUI.Button(Pokemons[i]["Name"][self.mode])
-            self.Pokemons_box = GUI.VBox([Pokemons[i]["Picture"][self.mode], self.Poke_butt])
+            self.Pokemons_box = GUI.VBox([Pokemons[i]["Picture"][self.mode], self.Poke_butt, ])
             self.Pokemons_Vbox = GUI.VBox([self.Pokemons_box, self.Poke_butt])
             self.Pokemons_prop.append([self.Pokemons_box])
             self.Poke_butt.onclick.do(self.poke_selected)
@@ -502,17 +507,22 @@ class MyAmazingApp(App):
         self.set_fighting()
         
     def set_fighting(self):
+        self.questions()
         self.mode_box.empty()
-        # creating loop for enimes
+        # creating enimie counter
         self.order = self.order + 1
+        # resetting pokemon stats
         self.Pokemon_stats: dict[str, int] = {"Energy": 100, "Health": 100}
+        # sends user to win screen if won
         if self.order == 5:
             self.win()
         else:
+            # puts new pokemon in if user beat the previous one
             self.user_attack = True
             self.fighting()
 
     def fighting(self):
+        # adding if statements to ensure they cant attack if they dont have energy
         if self.Player_stats["Health"] > 0:
             if self.Pokemon_stats["Health"] > 0:
                 if self.Player_stats["Energy"] > 0:
@@ -539,9 +549,11 @@ class MyAmazingApp(App):
                         neg_eng = self.Player_stats["Energy"] + Pokemons[self.chosen_pokemon]["Attack_Eng"]
                         if neg_eng < 0:
                             self.attack_buts.set_enabled(False)
+                        # adding specail attack in
                         self.attack_boxs = GUI.HBox([self.attack_buts, self.attacks])
                         self.attack_choice = GUI.VBox(self.attack_boxs)
                         self.attack_buts.onclick.do(self.spec_attack)
+                        # adding defult attacks in
                         for name in Attacks.keys():
                             self.attack = GUI.Label(f"{Attacks[name]["Dmg"]} damage, {Attacks[name]["Eng"]} energy!")
                             self.attack_but = GUI.Button(name)
@@ -552,14 +564,16 @@ class MyAmazingApp(App):
                             self.attack_choice.append(self.attack_box)
                             self.attack_but.onclick.do(self.attacking)
                             self.attack_but.onclick.do(lambda _, i=Attacks[name]["Order"]: self.attacking(i))
-                        Fight = GUI.VBox([self.comp_poke, self.user_poke, self.attack_choice])
+                        user = GUI.HBox([self.user_poke, self.attack_choice])
+                        Fight = GUI.VBox([self.comp_poke, user])
                         self.mode_box.append([Fight])
                     else:
                         self.comp_attack()
                 else:
-                        self.Player_stats["Energy"] = self.Player_stats["Energy"] + 35
-                        self.user_attack = True
-                        self.fighting()
+                    # if player runs out of energy they have to gain some
+                    self.Player_stats["Energy"] = self.Player_stats["Energy"] + 35
+                    self.user_attack = True
+                    self.fighting()
             else:
                 self.set_fighting()
         else:
@@ -574,28 +588,41 @@ class MyAmazingApp(App):
             self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
         else:
             self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + 35
+
         self.fighting()
 
+    def questions(self):
+        question_num = 3
+        
+        for question in Questions[self.mode]:
+            print(question)
+
+        
     def attacking(self, attack_but: GUI.Button):
         self.ordering = attack_but
         for at in Attacks.keys():
             if Attacks[at]["Order"] == self.ordering:
+                # finding specfic attack and taking away adamge and health
                 self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Attacks[at]["Dmg"]
                 self.Player_stats["Energy"] = self.Player_stats["Energy"] + Attacks[at]["Eng"]
                 self.fighting()
+    
 
 
     def spec_attack(self, attack_buts: GUI.Button):
+        # finding specail attack and using it
         self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Pokemons[self.chosen_pokemon]["Attack_Dmg"]
         self.Player_stats["Energy"] = self.Player_stats["Energy"] + Pokemons[self.chosen_pokemon]["Attack_Eng"]
         self.fighting()
 
     def win(self):
+        # tells user they won
         self.mode_box.empty()
         win = GUI.Label("CONGRATS U WON!!!")
         self.mode_box.append([win])
     
     def lose(self):
+        # tells user they lost
         self.mode_box.empty()
         win = GUI.Label("CONGRATS U LOST!!!")
         self.mode_box.append([win])
