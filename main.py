@@ -6,7 +6,6 @@ Date: 17/06/2024
 """
 import remi.gui as GUI
 from remi import start, App
-import time
 import random
 from typing import Any
 
@@ -98,7 +97,7 @@ Attacks: dict[str, dict[str, int]] = {
 # making questions
 Questions = [
     [
-        ["7 x 6", 42],
+        ["7 x 6", 42,],
         ["6 x 8", 48],
         ["9 x 7", 63],
         [
@@ -507,17 +506,20 @@ class MyAmazingApp(App):
         self.set_fighting()
         
     def set_fighting(self):
-        self.questions()
         self.mode_box.empty()
         # creating enimie counter
         self.order = self.order + 1
         # resetting pokemon stats
         self.Pokemon_stats: dict[str, int] = {"Energy": 100, "Health": 100}
+
         # sends user to win screen if won
         if self.order == 5:
             self.win()
         else:
             # puts new pokemon in if user beat the previous one
+            if self.order != 0:
+                self.Player_stats["Health"] = self.Player_stats["Health"] + 50
+                self.Player_stats["Energy"] = self.Player_stats["Energy"] + 50
             self.user_attack = True
             self.fighting()
 
@@ -581,25 +583,88 @@ class MyAmazingApp(App):
         
     def comp_attack(self):
         self.user_attack = True
-        neg_eng = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
-        print(neg_eng)
-        if neg_eng > 0:
-            self.Player_stats["Health"] = self.Player_stats["Health"] - Pokemons[self.order]["Attack_Dmg"]
-            self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
-        else:
-            self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + 35
-
+        chance_attack = random.randint(0, 1)
+        if chance_attack == 1:
+            neg_eng = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
+            if neg_eng > 0:
+                self.Player_stats["Health"] = self.Player_stats["Health"] - Pokemons[self.order]["Attack_Dmg"]
+                self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
+            else:
+                self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + 35
         self.fighting()
 
-    def questions(self):
-        question_num = 3
+    def questionsfun(self):
+        self.mode_box.empty()
+        amt_ques = len(Questions[self.mode])
+        self.chose_question = random.randint(0,amt_ques)
+        self.figure = GUI.Label("What is")
+        question_ask = GUI.Label(Questions[self.mode][self.chose_question][0])
+        self.user_guessing = GUI.TextInput("")
+        self.user_guessing.onkeyup.do(self.guessing)
+        self.ques_but = GUI.Button("Confirm")
+        self.ques_but.set_enabled(False)
+        self.ques_but.onclick.do(self.correct_but)
+        self.figure_box = GUI.HBox([self.figure, question_ask, self.user_guessing, self.ques_but])
+        self.mode_box.append([self.figure_box])
+
+    def guessing(self, user_guessing: GUI.Input, new_value: str, key_code: any):
+        self.user_guess = new_value
+        word_amount = len(new_value)
+        if word_amount > 0:
+            self.ques_but.set_enabled(True)
+        else:
+            self.ques_but.set_enabled(False)
+    
+    def correct_but(self, button: GUI.Button):
+        self.awnsers = (f"{Questions[self.mode][self.chose_question][1]}")
+        if self.user_guess == self.awnsers:
+            if self.spec_attack == True:
+                self.spec_attack_dmg()
+            else:
+                self.attacking_dmg
+        else:
+            self.ask_expl()
         
-        for question in Questions[self.mode]:
-            print(question)
+    def ask_expl(self):
+        self.mode_box.empty()
+        asking = GUI.Label("Would u like to see how to get that awnser")
+        yes = GUI.Button("yes")
+        no = GUI.Button("no")
+        no.onclick.do(self.no_but)
+        if len(Questions[self.mode][self.chose_question]) <= 1:
+            yes.set_enabled(False)
+        yes.onclick.do(self.explain_ques)
+        butt = GUI.HBox([yes, no])
+        box = GUI.VBox([asking, butt])
+        self.mode_box.append(box)
+
+    def no_but(self, button: GUI.Button):
+        self.fighting()
+
+    def explain_ques(self, button: GUI.Button):
+        self.mode_box.empty()
+        explain_box = GUI.VBox()
+        for i in range(len(Questions[self.mode][self.chose_question])):
+            if i != 1:
+                part_exp = GUI.Label(Questions[self.mode][self.chose_question][i])
+                explain_box.append(part_exp)
+        self.expl_but = GUI.Button("Okay")
+        explain_box.append(self.expl_but)
+        self.expl_but.onclick.do(self.done_explain)
+        self.mode_box.append(explain_box)
+            
+
+    def done_explain(self, button: GUI.Button):
+        print("working")
+        self.fighting()
 
         
     def attacking(self, attack_but: GUI.Button):
         self.ordering = attack_but
+        self.spec_attack = True
+        self.questionsfun()
+    
+    def attacking_dmg(self):
         for at in Attacks.keys():
             if Attacks[at]["Order"] == self.ordering:
                 # finding specfic attack and taking away adamge and health
@@ -610,6 +675,10 @@ class MyAmazingApp(App):
 
 
     def spec_attack(self, attack_buts: GUI.Button):
+        self.spec_attack = True
+        self.questionsfun()
+
+    def spec_attack_dmg(self):
         # finding specail attack and using it
         self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Pokemons[self.chosen_pokemon]["Attack_Dmg"]
         self.Player_stats["Energy"] = self.Player_stats["Energy"] + Pokemons[self.chosen_pokemon]["Attack_Eng"]
