@@ -15,18 +15,17 @@ from typing import Any
 # creates all pokemon images name and everything
 Pokemons: list[dict[Any, Any]] = [
     {
-        "Name": ["Bulbasaur", "Ivysaur", "Venusaur"],
+        "Name": ["Bulbasaur", "Ivysaur", "Venusaur"], # Evolution stages of the Pokémon
         "Picture": [
-            GUI.Image("""/res:Bulbasaur.png"""),
+            GUI.Image("""/res:Bulbasaur.png"""), # Images corresponding to each evolution stage 
             GUI.Image("""/res:Ivysaur.png"""),
             GUI.Image("""/res:Venusaur.png"""),
         ],
-        "Order": 1,
-        "Type": "Grass",
+        "Order": 1, # Pokémon's order in the game
         "Time": 30,
         "Attack_Name": "Mud Splat",
-        "Attack_Dmg": 25,
-        "Attack_Eng": -40,
+        "Attack_Dmg": 25, # Damage caused by the attack
+        "Attack_Eng": -40, # energy cost of attack
     },
     {
         "Name": ["Squirtle", "Wartortle", "Blastoise"],
@@ -36,7 +35,6 @@ Pokemons: list[dict[Any, Any]] = [
             GUI.Image("""/res:Blastoise_4.png"""),
         ],
         "Order": 2,
-        "Type": "Water",
         "Time": 25,
         "Attack_Name": "Splash",
         "Attack_Dmg": 30,
@@ -50,7 +48,6 @@ Pokemons: list[dict[Any, Any]] = [
             GUI.Image("""/res:Raichu.png"""),
         ],
         "Order": 3,
-        "Type": "Lightning",
         "Time": 20,
         "Attack_Name": "lightning Strike",
         "Attack_Dmg": 35,
@@ -64,7 +61,6 @@ Pokemons: list[dict[Any, Any]] = [
             GUI.Image("""/res:Charizard.png"""),
         ],
         "Order": 4,
-        "Type": "Fire",
         "Time": 15,
         "Attack_Name": "Fire Breath",
         "Attack_Dmg": 60,
@@ -78,7 +74,6 @@ Pokemons: list[dict[Any, Any]] = [
             GUI.Image("""/res:Gengar.png"""),
         ],
         "Order": 5,
-        "Type": "Poisen",
         "Time": 10,
         "Attack_Name": "Poison Spit",
         "Attack_Dmg": 48,
@@ -455,6 +450,7 @@ class MyAmazingApp(App):
         super().__init__(*args, static_file_path={"res": res_path})
 
     def main(self):
+        """Creates the main interface for the app."""
         # setting up modes
         self.ask_user_mode = GUI.Label("Would you like to play on")
         self.easy_but = GUI.Button("Easy")
@@ -472,21 +468,25 @@ class MyAmazingApp(App):
         return(self.mode_box)
     
     def easy_button(self, easy_but: GUI.Button):
+        """Sets the game mode to easy."""
         # putting in mode
         self.mode = 0
         self.sel_poke()
 
     def med_button(self, med_but: GUI.Button):
+        """Sets the game mode to medium."""
         # putting in mode
         self.mode = 1
         self.sel_poke()
 
     def hard_button(self, hard_but: GUI.Button):
+        """Sets the game mode to hard."""
         # putting in mode
         self.mode = 2
         self.sel_poke()
 
     def sel_poke(self):
+        """Allows the user to select a Pokémon."""
         self.mode_box.empty()
         self.Pokemons_prop = GUI.HBox()
         # selecting spefic pokemon
@@ -501,11 +501,13 @@ class MyAmazingApp(App):
         self.mode_box.append([self.Pokemons_prop])
 
     def poke_selected(self, Poke_butt: GUI.Button):
+        """Handles the Pokémon selection."""
         # gets what poekmon is chosen
         self.chosen_pokemon = Poke_butt
         self.set_fighting()
         
     def set_fighting(self):
+        """Sets up the fighting phase."""
         self.mode_box.empty()
         # creating enimie counter
         self.order = self.order + 1
@@ -524,6 +526,7 @@ class MyAmazingApp(App):
             self.fighting()
 
     def fighting(self):
+        """Handles the fighting logic."""
         # adding if statements to ensure they cant attack if they dont have energy
         if self.Player_stats["Health"] > 0:
             if self.Pokemon_stats["Health"] > 0:
@@ -554,7 +557,7 @@ class MyAmazingApp(App):
                         # adding specail attack in
                         self.attack_boxs = GUI.HBox([self.attack_buts, self.attacks])
                         self.attack_choice = GUI.VBox(self.attack_boxs)
-                        self.attack_buts.onclick.do(self.spec_attack)
+                        self.attack_buts.onclick.do(self.specail_attack)
                         # adding defult attacks in
                         for name in Attacks.keys():
                             self.attack = GUI.Label(f"{Attacks[name]["Dmg"]} damage, {Attacks[name]["Eng"]} energy!")
@@ -583,20 +586,32 @@ class MyAmazingApp(App):
         
     def comp_attack(self):
         self.user_attack = True
+        self.mode_box.empty()
+        # a chance for computer to miss attack
+        comp_but = GUI.Button("Comfirm")
         chance_attack = random.randint(0, 1)
         if chance_attack == 1:
+            # takes away energy and health if they can attack
             neg_eng = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
             if neg_eng > 0:
                 self.Player_stats["Health"] = self.Player_stats["Health"] - Pokemons[self.order]["Attack_Dmg"]
                 self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + Pokemons[self.order]["Attack_Eng"]
+                comp_Label = GUI.Label(f"You just took {Pokemons[self.order]["Attack_Dmg"]} damage!")
             else:
                 self.Pokemon_stats["Energy"] = self.Pokemon_stats["Energy"] + 35
-        self.fighting()
+                comp_Label = GUI.Label(f"Your oponent just gained 35 energy!")
+        else:
+            comp_Label = GUI.Label(f"Your oponent missed!")
+        comp_but.onclick.do(self.no_but)
+        comp_box = GUI.VBox([comp_Label, comp_but])
+        self.mode_box.append(comp_box)
 
     def questionsfun(self):
         self.mode_box.empty()
+        # gets a random question
         amt_ques = len(Questions[self.mode])
         self.chose_question = random.randint(0,amt_ques)
+        # asks user the question
         self.figure = GUI.Label("What is")
         question_ask = GUI.Label(Questions[self.mode][self.chose_question][0])
         self.user_guessing = GUI.TextInput("")
@@ -608,6 +623,7 @@ class MyAmazingApp(App):
         self.mode_box.append([self.figure_box])
 
     def guessing(self, user_guessing: GUI.Input, new_value: str, key_code: any):
+        # gets the number the user typed in and only lets them continue if they have typed somthing
         self.user_guess = new_value
         word_amount = len(new_value)
         if word_amount > 0:
@@ -616,16 +632,18 @@ class MyAmazingApp(App):
             self.ques_but.set_enabled(False)
     
     def correct_but(self, button: GUI.Button):
+        # goes to new funtion if user gets question right or wrong
         self.awnsers = (f"{Questions[self.mode][self.chose_question][1]}")
         if self.user_guess == self.awnsers:
             if self.spec_attack == True:
                 self.spec_attack_dmg()
             else:
-                self.attacking_dmg
+                self.attacking_dmg()
         else:
             self.ask_expl()
         
     def ask_expl(self):
+        # asks users see how to get the correct awnser for the question
         self.mode_box.empty()
         asking = GUI.Label("Would u like to see how to get that awnser")
         yes = GUI.Button("yes")
@@ -639,9 +657,11 @@ class MyAmazingApp(App):
         self.mode_box.append(box)
 
     def no_but(self, button: GUI.Button):
+        # sends user back to fighting
         self.fighting()
 
     def explain_ques(self, button: GUI.Button):
+        # lets users see how to get the correct awnser for the question
         self.mode_box.empty()
         explain_box = GUI.VBox()
         for i in range(len(Questions[self.mode][self.chose_question])):
@@ -655,42 +675,60 @@ class MyAmazingApp(App):
             
 
     def done_explain(self, button: GUI.Button):
-        print("working")
+        # returns to fighting 
         self.fighting()
 
         
     def attacking(self, attack_but: GUI.Button):
+        # tells what attack is being used
         self.ordering = attack_but
-        self.spec_attack = True
+        self.spec_attack = False
         self.questionsfun()
     
     def attacking_dmg(self):
+        """Handles the damage calculation when the player attacks."""
+        self.mode_box.empty()
+        # loops through attacks to get correct attack
+        comp_but = GUI.Button("Comfirm")
         for at in Attacks.keys():
             if Attacks[at]["Order"] == self.ordering:
                 # finding specfic attack and taking away adamge and health
                 self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Attacks[at]["Dmg"]
                 self.Player_stats["Energy"] = self.Player_stats["Energy"] + Attacks[at]["Eng"]
-                self.fighting()
+                player_info = GUI.Label(f"You just did {Attacks[at]["Dmg"]} Damage!")
+        comp_but.onclick.do(self.no_but)
+        comp_box = GUI.VBox([player_info, comp_but])
+        self.mode_box.append(comp_box)
     
 
 
-    def spec_attack(self, attack_buts: GUI.Button):
+    def specail_attack(self, attack_buts: GUI.Button):
+        """idicates that your using a specail attack"""
+        # tell if specail attack is being used
         self.spec_attack = True
         self.questionsfun()
 
     def spec_attack_dmg(self):
+        """Displays a message indicating that the player has won the game."""
         # finding specail attack and using it
+        comp_but = GUI.Button("Comfirm")
         self.Pokemon_stats["Health"] = self.Pokemon_stats["Health"] - Pokemons[self.chosen_pokemon]["Attack_Dmg"]
         self.Player_stats["Energy"] = self.Player_stats["Energy"] + Pokemons[self.chosen_pokemon]["Attack_Eng"]
+        player_info = GUI.Label(f"You just did {Pokemons[self.chosen_pokemon]["Attack_Dmg"]} Damage!")
+        comp_but.onclick.do(self.no_but)
+        comp_box = GUI.VBox([player_info, comp_but])
+        self.mode_box.append(comp_box)
         self.fighting()
 
     def win(self):
+        """Displays a message indicating that the player has won the game."""
         # tells user they won
         self.mode_box.empty()
         win = GUI.Label("CONGRATS U WON!!!")
         self.mode_box.append([win])
     
     def lose(self):
+        """Displays a message indicating that the player has lost the game."""
         # tells user they lost
         self.mode_box.empty()
         win = GUI.Label("CONGRATS U LOST!!!")
